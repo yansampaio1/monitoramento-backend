@@ -2,27 +2,27 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import json
 
-# Criação da app (só uma vez!)
+# Criação da app
 app = FastAPI()
 
-# Middleware CORS (mantém)
+# Middleware CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Pode ajustar para algo mais restrito no futuro
+    allow_origins=["*"],  # Pode ajustar depois
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Rota raiz
+# ✅ Mensagem da rota raiz
 @app.get("/")
 def read_root():
     return {"mensagem": "API de Monitoramento de Cursistas Rodando!"}
 
-# Carregamento do JSON
+# ✅ Carregamento do JSON
 with open("cursistas_completo.json", "r", encoding="utf-8") as f:
     dados = json.load(f)
 
-# Rota para buscar cursistas por orientador ou líder
+# ✅ Rota para buscar cursistas por orientador ou líder
 @app.get("/api/cursistas")
 def get_cursistas(usuario: str = Query(...)):
     usuario = usuario.strip().lower()
@@ -35,3 +35,9 @@ def get_cursistas(usuario: str = Query(...)):
         return [c for c in dados if c["lider"].lower() == usuario]
     else:
         return {"erro": "Usuário não encontrado"}
+
+# ✅ NOVO ENDPOINT: Lista de orientadores
+@app.get("/api/orientadores")
+def get_orientadores():
+    orientadores = sorted(set(c["orientador"] for c in dados if "orientador" in c))
+    return orientadores
