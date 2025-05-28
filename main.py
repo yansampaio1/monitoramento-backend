@@ -1,13 +1,14 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import json
+import re
 
 app = FastAPI()
 
-# CORS Middleware
+# CORS Middleware (libera para frontend no Firebase, por exemplo)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Pode ajustar para restringir por domínio
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -17,11 +18,13 @@ app.add_middleware(
 def read_root():
     return {"mensagem": "API de Monitoramento de Cursistas Rodando!"}
 
-# Carrega o JSON com os dados
+# Carregamento do JSON com correção de NaN
 with open("cursistas_completo.json", "r", encoding="utf-8") as f:
-    dados = json.load(f)
+    conteudo = f.read()
+    conteudo_corrigido = re.sub(r'\bNaN\b', 'null', conteudo)
+    dados = json.loads(conteudo_corrigido)
 
-# Endpoint para buscar cursistas por orientador ou líder
+# Rota para buscar cursistas por orientador ou líder
 @app.get("/api/cursistas")
 def get_cursistas(usuario: str = Query(...)):
     usuario = usuario.strip().lower()
@@ -36,7 +39,7 @@ def get_cursistas(usuario: str = Query(...)):
     else:
         return {"erro": "Usuário não encontrado"}
 
-# Endpoint que lista todos os orientadores
+# Rota para listar todos os orientadores
 @app.get("/api/orientadores")
 def get_orientadores():
     orientadores = sorted(set(
